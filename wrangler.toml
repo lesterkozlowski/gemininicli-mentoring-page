@@ -1,0 +1,15 @@
+
+name = "mentoring-dashboard"
+compatibility_date = "2025-07-12"
+
+
+[vars]
+DB_TABLE_MENTORS = "mentors"
+DB_TABLE_MENTEES = "mentees"
+DB_TABLE_SUPPORTERS = "supporters"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "mentoring-db"
+database_id = "e8973bbc-c580-4487-ae96-f0a7243dd991"
+preview_database_id = "e8973bbc-c580-4487-ae96-f0a7243dd991"
