@@ -2,7 +2,7 @@ import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 
 type Bindings = {
-  DB: D1Database
+  DB: any
 }
 
 const app = new Hono<{ Bindings: Bindings }>()
@@ -24,7 +24,7 @@ const authMiddleware = (c: any, next: any) => {
 }
 
 // Dashboard statistics endpoint
-app.get('/dashboard/stats', authMiddleware, async (c) => {
+app.get('/api/dashboard/stats', authMiddleware, async (c) => {
   try {
     const db = c.env.DB
 
@@ -50,7 +50,7 @@ app.get('/dashboard/stats', authMiddleware, async (c) => {
     const tasksQuery = `
       SELECT COUNT(*) as total 
       FROM activities 
-      WHERE type = 'task' AND (details->>'completed' IS NULL OR details->>'completed' = 'false')
+      WHERE activity_type = 'task' AND is_completed = 0
     `
     const tasksResult = await db.prepare(tasksQuery).first()
     
@@ -81,7 +81,7 @@ app.get('/dashboard/stats', authMiddleware, async (c) => {
 })
 
 // Monthly growth data endpoint
-app.get('/dashboard/monthly-growth', authMiddleware, async (c) => {
+app.get('/api/dashboard/monthly-growth', authMiddleware, async (c) => {
   try {
     const db = c.env.DB
     
@@ -101,7 +101,6 @@ app.get('/dashboard/monthly-growth', authMiddleware, async (c) => {
     
     // Transform data into chart format
     const monthNames = ['Sty', 'Lut', 'Mar', 'Kwi', 'Maj', 'Cze', 'Lip', 'Sie', 'Wrz', 'Paź', 'Lis', 'Gru']
-    const chartData = []
     
     // Group by month
     const dataByMonth: { [key: string]: any } = {}
@@ -134,14 +133,14 @@ app.get('/dashboard/monthly-growth', authMiddleware, async (c) => {
 })
 
 // Status distribution endpoint
-app.get('/dashboard/status-distribution', authMiddleware, async (c) => {
+app.get('/api/dashboard/status-distribution', authMiddleware, async (c) => {
   try {
     const db = c.env.DB
     
     const statusQuery = `
       SELECT 
         CASE 
-          WHEN status = 'new' THEN 'Nowe zgłoszenia'
+          WHEN status = 'new_lead' THEN 'Nowe zgłoszenia'
           WHEN status = 'in_progress' THEN 'W procesie'
           WHEN status = 'active' THEN 'Aktywni'
           WHEN status = 'completed' THEN 'Zakończeni'
@@ -156,7 +155,7 @@ app.get('/dashboard/status-distribution', authMiddleware, async (c) => {
     
     // Add colors for chart
     const colors = ['#3b82f6', '#f59e0b', '#10b981', '#6b7280']
-    const statusData = statusResult.results.map((row, index) => ({
+    const statusData = statusResult.results.map((row: any, index: number) => ({
       ...row,
       color: colors[index % colors.length]
     }))
@@ -169,17 +168,16 @@ app.get('/dashboard/status-distribution', authMiddleware, async (c) => {
 })
 
 // Recent activities endpoint
-app.get('/dashboard/recent-activities', authMiddleware, async (c) => {
+app.get('/api/dashboard/recent-activities', authMiddleware, async (c) => {
   try {
     const db = c.env.DB
     
     const activitiesQuery = `
       SELECT 
         a.id,
-        a.type,
-        a.title,
+        a.activity_type as type,
         a.created_at,
-        c.first_name || ' ' || c.last_name as user_name
+        c.name as user_name
       FROM activities a
       LEFT JOIN contacts c ON a.parent_type = 'contact' AND a.parent_id = c.id
       ORDER BY a.created_at DESC
@@ -222,9 +220,13 @@ function formatTimeAgo(dateString: string): string {
 }
 
 // Health check endpoint
-app.get('/health', (c) => {
+app.get('/api/health', (c) => {
   return c.json({ status: 'ok', timestamp: new Date().toISOString() })
 })
 
 // Export the handler for Cloudflare Pages Functions
-export const onRequest = app.fetch
+// In Pages Functions, the handler receives a context object, not (request, env) directly.
+// We forward the proper arguments to Hono's fetch handler to avoid runtime errors.
+export const onRequest = (context: any) => {
+  return app.fetch(context.request, context.env, context)
+}
