@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
-import { Menu, X, Home, Users, Building2, CheckSquare, BarChart3, Settings, Moon, Sun } from 'lucide-react'
+import { Link, useLocation } from 'react-router-dom'
+import { Menu, X, Home, Users, Building2, CheckSquare, Moon, Sun } from 'lucide-react'
 import { Button } from './ui/button'
 
 interface LayoutProps {
@@ -9,14 +10,16 @@ interface LayoutProps {
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [darkMode, setDarkMode] = useState(false)
+  const location = useLocation()
 
   const menuItems = [
-    { icon: Home, label: 'Dashboard', href: '/', active: true },
-    { icon: Users, label: 'Kontakty', href: '/contacts' },
-    { icon: Building2, label: 'Organizacje', href: '/organizations' },
-    { icon: CheckSquare, label: 'Zadania', href: '/tasks' },
-    { icon: BarChart3, label: 'Raporty', href: '/reports' },
-    { icon: Settings, label: 'Ustawienia', href: '/settings' },
+    { icon: Home, label: 'Dashboard', href: '/' },
+    { icon: Users, label: 'Mentorzy', href: '/mentors' },
+    { icon: Users, label: 'Mentees', href: '/mentees' },
+    { icon: Users, label: 'Supporterzy', href: '/supporters' },
+    { icon: Building2, label: 'Firmy Partnerskie', href: '/partner-companies' },
+    { icon: Building2, label: 'Organizacje Partnerskie', href: '/partner-organizations' },
+    { icon: CheckSquare, label: 'Relacje', href: '/relations' },
   ]
 
   const toggleDarkMode = () => {
@@ -44,20 +47,24 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           </div>
           
           <nav className="mt-6 px-3 flex-1">
-            {menuItems.map((item) => (
-              <a
-                key={item.label}
-                href={item.href}
-                className={`flex items-center px-3 py-3 mb-1 text-sm font-medium rounded-lg transition-all duration-200 ${
-                  item.active
-                    ? 'bg-primary text-primary-foreground shadow-lg'
-                    : 'text-foreground hover:bg-accent hover:text-accent-foreground'
-                }`}
-              >
-                <item.icon className="h-5 w-5 mr-3" />
-                {item.label}
-              </a>
-            ))}
+            {menuItems.map((item) => {
+              const isActive = location.pathname === item.href || 
+                              (item.href !== '/' && location.pathname.startsWith(item.href))
+              return (
+                <Link
+                  key={item.label}
+                  to={item.href}
+                  className={`flex items-center px-3 py-3 mb-1 text-sm font-medium rounded-lg transition-all duration-200 ${
+                    isActive
+                      ? 'bg-primary text-primary-foreground shadow-lg'
+                      : 'text-foreground hover:bg-accent hover:text-accent-foreground'
+                  }`}
+                >
+                  <item.icon className="h-5 w-5 mr-3" />
+                  {item.label}
+                </Link>
+              )
+            })}
           </nav>
         </div>
 

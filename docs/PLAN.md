@@ -1,7 +1,7 @@
 # Plan Implementacji - Mentoring CRM MVP
 
-**Wersja:** 2.0  
-**Data:** 2025-08-10  
+**Wersja:** 2.1  
+**Data:** 2025-08-15  
 **Typ:** Plan działania dla AI Agent
 
 ## 1. Analiza Obecnego Stanu Kodu
@@ -89,7 +89,20 @@ mentoring-crm/
 4. **Dobra separacja:** Backend/Frontend dobrze oddzielone
 5. **Gotowe narzędzia:** useApi hook, TypeScript typy, UI komponenty
 
-## 2. Plan Implementacji (MVP-First Approach)
+## 2. Plan Implementacji (MVP — moduł po module)
+
+### 2.0 Tryb realizacji (moduł po module)
+- Jednoczesność: realizujemy dokładnie jeden moduł/encję naraz.
+- Po każdym module dostarczamy:
+  - lokalny podgląd (preview): narzędzie `browser_preview` Windsurf (lepsze niż `npm run dev`)
+  - krótką listę przypadków testowych i wyniki
+  - bramkę akceptacji PM/Stakeholder
+- Definition of Done (DoD) dla modułu:
+  - CRUD end-to-end z backendem (Bearer)
+  - walidacje i komunikaty błędów (Zod + `FormMessage`)
+  - UI spójny z shadcn/ui z `src/components/ui/*`
+  - routing i linki działają
+  - brak błędów w konsoli i w odpowiedziach API (2xx dla ścieżek pozytywnych)
 
 ### ETAP 1: Rozszerzenie Bazy Danych
 **Cel:** Przygotowanie bazy pod wszystkie funkcje
@@ -236,8 +249,8 @@ interface DashboardStats {
 
 **Rezultat:** Dashboard z pełnym wglądem biznesowym na wszystkie typy
 
-### ETAP 4: CRUD dla Kontaktów - Mentorzy
-**Cel:** Pełne zarządzanie mentorami jako pierwszy typ
+### ETAP 4: CRUD Mentorzy (tylko mentorzy)
+**Cel:** Pełne zarządzanie mentorami jako pierwsza encja
 
 #### 4.1 Backend API - Mentorzy
 ```typescript
@@ -251,7 +264,7 @@ app.post('/api/contacts/mentors', authMiddleware, async (c) => {
 });
 
 app.get('/api/contacts/mentors/:id', authMiddleware, async (c) => {
-  // Szczegóły mentora z relacjami
+  // Szczegóły mentora
 });
 
 app.put('/api/contacts/mentors/:id', authMiddleware, async (c) => {
@@ -273,38 +286,221 @@ app.delete('/api/contacts/mentors/:id', authMiddleware, async (c) => {
 - MentorFilters.tsx    // Filtry (status, specjalizacja, etc.)
 ```
 
-#### 4.3 Strona Mentorów
+#### 4.3 Routing Mentorów
 - `/mentors` - główna strona z listą
 - `/mentors/:id` - szczegóły mentora
 - `/mentors/new` - dodawanie nowego mentora
 
 **Rezultat:** Pełny CRUD dla mentorów z działającym UI
 
-### ETAP 5: CRUD dla Kontaktów - Mentees
-**Cel:** Pełne zarządzanie mentees z focus na dopasowanie
+#### Bramka akceptacji — ETAP 4 (Mentorzy)
+- Preview: narzędzie `browser_preview` Windsurf (z feedbackiem z poziomu strony)
+- Testy manualne: utworzenie/edycja/usunięcie; lista (paginacja, wyszukiwanie, filtry); szczegóły
+- Warunek przejścia: akceptacja PM po spełnieniu DoD (sekcja 2.0)
+
+### ETAP 5: CRUD Mentees (tylko mentees)
+**Cel:** Pełne zarządzanie mentees jako druga encja
 
 #### 5.1 Backend API - Mentees
-- Podobne endpointy jak dla mentorów
-- Dodatkowa logika dla statusu dopasowania
-- Query dla mentees bez mentora
+```typescript
+// functions/api/[[path]].ts
+app.get('/api/contacts/mentees', authMiddleware, async (c) => {
+  // Lista mentees z filtrowaniem, paginacją, wyszukiwaniem
+});
+
+app.post('/api/contacts/mentees', authMiddleware, async (c) => {
+  // Tworzenie nowego mentee
+});
+
+app.get('/api/contacts/mentees/:id', authMiddleware, async (c) => {
+  // Szczegóły mentee
+});
+
+app.put('/api/contacts/mentees/:id', authMiddleware, async (c) => {
+  // Aktualizacja mentee
+});
+
+app.delete('/api/contacts/mentees/:id', authMiddleware, async (c) => {
+  // Usunięcie mentee
+});
+```
 
 #### 5.2 Frontend - Komponenty Mentees
-- Podobna struktura jak mentorzy
-- Dodatkowe pola: cele rozwojowe, preferowany mentor
-- Widget statusu dopasowania
-- Lista dostępnych mentorów
-
-#### 5.3 Integracja z Dashboard
-- Aktualizacja statystyk mentees
-- Widget "Mentees czekający na dopasowanie"
-
-**Rezultat:** Pełny CRUD dla mentees z systemem dopasowania
-
-### ETAP 6: Relacje Mentor-Mentee
-**Cel:** Działające zarządzanie relacjami
-
-#### 6.1 Backend API - Relacje
 ```typescript
+// src/components/mentees/
+- MenteesList.tsx      // Lista z filtrowaniem i wyszukiwaniem
+- MenteeDetail.tsx     // Szczegóły mentee
+- MenteeForm.tsx       // Formularz dodawania/edycji
+- MenteeCard.tsx       // Karta mentee na liście
+- MenteeFilters.tsx    // Filtry (status, cele rozwojowe, etc.)
+```
+
+#### 5.3 Routing Mentees
+- `/mentees` - główna strona z listą
+- `/mentees/:id` - szczegóły mentee
+- `/mentees/new` - dodawanie nowego mentee
+
+**Rezultat:** Pełny CRUD dla mentees z działającym UI
+
+#### Bramka akceptacji — ETAP 5 (Mentees)
+- Preview: narzędzie `browser_preview` Windsurf (z feedbackiem z poziomu strony)
+- Testy manualne: utworzenie/edycja/usunięcie; lista (paginacja, wyszukiwanie, filtry); szczegóły
+- Warunek przejścia: akceptacja PM po spełnieniu DoD (sekcja 2.0)
+
+### ETAP 6: CRUD Supporterzy (tylko supporterzy)
+**Cel:** Pełne zarządzanie supporterami jako trzecia encja
+
+#### 6.1 Backend API - Supporterzy
+```typescript
+// functions/api/[[path]].ts
+app.get('/api/contacts/supporters', authMiddleware, async (c) => {
+  // Lista supporterów z filtrowaniem, paginacją, wyszukiwaniem
+});
+
+app.post('/api/contacts/supporters', authMiddleware, async (c) => {
+  // Tworzenie nowego supportera
+});
+
+app.get('/api/contacts/supporters/:id', authMiddleware, async (c) => {
+  // Szczegóły supportera
+});
+
+app.put('/api/contacts/supporters/:id', authMiddleware, async (c) => {
+  // Aktualizacja supportera
+});
+
+app.delete('/api/contacts/supporters/:id', authMiddleware, async (c) => {
+  // Usunięcie supportera
+});
+```
+
+#### 6.2 Frontend - Komponenty Supporterów
+```typescript
+// src/components/supporters/
+- SupportersList.tsx   // Lista z filtrowaniem i wyszukiwaniem
+- SupporterDetail.tsx  // Szczegóły supportera
+- SupporterForm.tsx    // Formularz dodawania/edycji
+- SupporterCard.tsx    // Karta supportera na liście
+- SupporterFilters.tsx // Filtry (typ wsparcia, obszary ekspertyzy)
+```
+
+#### 6.3 Routing Supporterów
+- `/supporters` - główna strona z listą
+- `/supporters/:id` - szczegóły supportera
+- `/supporters/new` - dodawanie nowego supportera
+
+**Rezultat:** Pełny CRUD dla supporterów z działającym UI
+
+#### Bramka akceptacji — ETAP 6 (Supporterzy)
+- Preview: narzędzie `browser_preview` Windsurf (z feedbackiem z poziomu strony)
+- Testy manualne: utworzenie/edycja/usunięcie; lista (paginacja, wyszukiwanie, filtry); szczegóły
+- Warunek przejścia: akceptacja PM po spełnieniu DoD (sekcja 2.0)
+
+### ETAP 7: CRUD Firmy Partnerskie (tylko firmy)
+**Cel:** Pełne zarządzanie firmami partnerskimi jako czwarta encja
+
+#### 7.1 Backend API - Firmy Partnerskie
+```typescript
+// functions/api/[[path]].ts
+app.get('/api/partner-companies', authMiddleware, async (c) => {
+  // Lista firm z filtrowaniem, paginacją, wyszukiwaniem
+});
+
+app.post('/api/partner-companies', authMiddleware, async (c) => {
+  // Tworzenie nowej firmy
+});
+
+app.get('/api/partner-companies/:id', authMiddleware, async (c) => {
+  // Szczegóły firmy
+});
+
+app.put('/api/partner-companies/:id', authMiddleware, async (c) => {
+  // Aktualizacja firmy
+});
+
+app.delete('/api/partner-companies/:id', authMiddleware, async (c) => {
+  // Usunięcie firmy
+});
+```
+
+#### 7.2 Frontend - Komponenty Firm Partnerskich
+```typescript
+// src/components/partner-companies/
+- PartnerCompaniesList.tsx   // Lista z filtrowaniem i wyszukiwaniem
+- PartnerCompanyDetail.tsx   // Szczegóły firmy
+- PartnerCompanyForm.tsx     // Formularz dodawania/edycji
+- PartnerCompanyCard.tsx     // Karta firmy na liście
+- PartnerCompanyFilters.tsx  // Filtry (branża, rozmiar, typ współpracy)
+```
+
+#### 7.3 Routing Firm Partnerskich
+- `/partner-companies` - główna strona z listą
+- `/partner-companies/:id` - szczegóły firmy
+- `/partner-companies/new` - dodawanie nowej firmy
+
+**Rezultat:** Pełny CRUD dla firm partnerskich z działającym UI
+
+#### Bramka akceptacji — ETAP 7 (Firmy Partnerskie)
+- Preview: narzędzie `browser_preview` Windsurf (z feedbackiem z poziomu strony)
+- Testy manualne: utworzenie/edycja/usunięcie; lista (paginacja, wyszukiwanie, filtry); szczegóły
+- Warunek przejścia: akceptacja PM po spełnieniu DoD (sekcja 2.0)
+
+### ETAP 8: CRUD Organizacje Partnerskie (tylko organizacje)
+**Cel:** Rozszerzenie zarządzania organizacjami partnerskimi jako piąta encja
+
+#### 8.1 Backend API - Organizacje Partnerskie (rozszerzenie)
+```typescript
+// functions/api/[[path]].ts
+// Rozszerzenie istniejących endpointów /api/organizations
+app.get('/api/organizations', authMiddleware, async (c) => {
+  // Lista organizacji z pełnym filtrowaniem, paginacją
+});
+
+app.post('/api/organizations', authMiddleware, async (c) => {
+  // Tworzenie nowej organizacji
+});
+
+app.get('/api/organizations/:id', authMiddleware, async (c) => {
+  // Szczegóły organizacji
+});
+
+app.put('/api/organizations/:id', authMiddleware, async (c) => {
+  // Aktualizacja organizacji
+});
+
+app.delete('/api/organizations/:id', authMiddleware, async (c) => {
+  // Usunięcie organizacji
+});
+```
+
+#### 8.2 Frontend - Komponenty Organizacji Partnerskich
+```typescript
+// src/components/partner-organizations/
+- PartnerOrganizationsList.tsx   // Lista z filtrowaniem i wyszukiwaniem
+- PartnerOrganizationDetail.tsx  // Szczegóły organizacji
+- PartnerOrganizationForm.tsx    // Formularz dodawania/edycji
+- PartnerOrganizationCard.tsx    // Karta organizacji na liście
+- PartnerOrganizationFilters.tsx // Filtry (typ, status, obszar działania)
+```
+
+#### 8.3 Routing Organizacji Partnerskich
+- `/partner-organizations` - główna strona z listą
+- `/partner-organizations/:id` - szczegóły organizacji
+- `/partner-organizations/new` - dodawanie nowej organizacji
+
+**Rezultat:** Pełny CRUD dla organizacji partnerskich z działającym UI
+
+#### Bramka akceptacji — ETAP 8 (Organizacje Partnerskie)
+- Preview: narzędzie `browser_preview` Windsurf (z feedbackiem z poziomu strony)
+- Testy manualne: utworzenie/edycja/usunięcie; lista (paginacja, wyszukiwanie, filtry); szczegóły
+- Warunek przejścia: akceptacja PM po spełnieniu DoD (sekcja 2.0)
+
+### ETAP 9: Relacje Mentor-Mentee (tylko relacje)
+**Cel:** Działające zarządzanie relacjami między mentorami a mentees
+
+#### 9.1 Backend API - Relacje
+```typescript
+// functions/api/[[path]].ts
 app.get('/api/contacts/:id/relations', authMiddleware, async (c) => {
   // Relacje dla danego kontaktu (mentor lub mentee)
 });
@@ -320,43 +516,35 @@ app.put('/api/relations/:id', authMiddleware, async (c) => {
 app.delete('/api/relations/:id', authMiddleware, async (c) => {
   // Usunięcie relacji
 });
+
+app.get('/api/relations', authMiddleware, async (c) => {
+  // Lista wszystkich relacji z filtrowaniem
+});
 ```
 
-#### 6.2 Frontend - Zarządzanie Relacjami
+#### 9.2 Frontend - Zarządzanie Relacjami
 ```typescript
 // src/components/relations/
 - RelationsManager.tsx    // Główny komponent w szczegółach kontaktu
 - AddRelationModal.tsx    // Modal dodawania relacji
 - RelationCard.tsx        // Karta pojedynczej relacji
 - RelationStatusBadge.tsx // Badge statusu
+- RelationsList.tsx       // Lista wszystkich relacji
 ```
 
-#### 6.3 Integracja z Kontaktami
+#### 9.3 Integracja z Kontaktami
 - Dodanie sekcji relacji do MentorDetail i MenteeDetail
 - Aktualizacja dashboard o statystyki relacji
+- Routing `/relations` dla przeglądu wszystkich relacji
 
 **Rezultat:** Pełne zarządzanie relacjami mentor-mentee
 
-### ETAP 7: Supporterzy i Firmy Partnerskie
-**Cel:** Pozostałe typy podmiotów
+#### Bramka akceptacji — ETAP 9 (Relacje)
+- Preview: narzędzie `browser_preview` Windsurf (z feedbackiem z poziomu strony)
+- Testy manualne: dodanie/zmiana/usunięcie relacji; aktualizacja statusu; odświeżenie widoków kontaktów
+- Warunek przejścia: akceptacja PM po spełnieniu DoD (sekcja 2.0)
 
-#### 7.1 CRUD Supporterzy
-- Backend API podobny do mentorów
-- Frontend komponenty
-- Specyficzne pola: typ wsparcia, obszary ekspertyzy
-
-#### 7.2 CRUD Firmy Partnerskie
-- Backend API dla partner_companies
-- Frontend komponenty
-- Powiązania z kontaktami (dropdown w formularzach)
-
-#### 7.3 Aktualizacja Organizacji Partnerskich
-- Rozszerzenie istniejącego CRUD
-- Nowy frontend z pełną funkcjonalnością
-
-**Rezultat:** Wszystkie 5 typów podmiotów z pełnym CRUD
-
-### ETAP 8: Publiczne Formularze
+### ETAP 10: Publiczne Formularze
 **Cel:** Automatyzacja pozyskiwania zgłoszeń
 
 #### 8.1 Backend - Publiczne API
@@ -392,7 +580,12 @@ window.MentoringForms = {
 
 **Rezultat:** Działające publiczne formularze do osadzania
 
-### ETAP 9: Finalizacja i Testy
+#### Bramka akceptacji — ETAP 10 (Publiczne formularze)
+- Preview: narzędzie `browser_preview` Windsurf (z feedbackiem z poziomu strony)
+- Testy manualne: zgłoszenia przez widget; weryfikacja POST endpointów; rate limiting
+- Warunek przejścia: akceptacja PM po spełnieniu DoD (sekcja 2.0)
+
+### ETAP 11: Finalizacja i Testy
 **Cel:** Stabilny, przetestowany MVP
 
 #### 9.1 Testy

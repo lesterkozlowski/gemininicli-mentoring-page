@@ -38,28 +38,60 @@ const Dashboard: React.FC = () => {
 
   const stats = [
     {
-      title: 'Całkowita liczba kontaktów',
-      value: dashboardStats?.totalContacts?.toString() || '0',
+      title: 'Mentorzy',
+      value: dashboardStats?.mentorsCount?.toString() || '0',
       change: '+12%',
       changeType: 'positive',
       icon: Users,
-      color: 'from-primary to-primary/90'
+      color: 'from-blue-500 to-blue-600'
     },
     {
-      title: 'Organizacje partnerskie',
-      value: dashboardStats?.organizations?.toString() || '0',
+      title: 'Mentees',
+      value: dashboardStats?.menteesCount?.toString() || '0',
+      change: '+8%',
+      changeType: 'positive',
+      icon: Users,
+      color: 'from-green-500 to-green-600'
+    },
+    {
+      title: 'Supporterzy',
+      value: dashboardStats?.supportersCount?.toString() || '0',
+      change: '+5%',
+      changeType: 'positive',
+      icon: Users,
+      color: 'from-purple-500 to-purple-600'
+    },
+    {
+      title: 'Firmy Partnerskie',
+      value: dashboardStats?.partnerCompaniesCount?.toString() || '0',
+      change: '+3',
+      changeType: 'positive',
+      icon: Building2,
+      color: 'from-orange-500 to-orange-600'
+    },
+    {
+      title: 'Organizacje Partnerskie',
+      value: dashboardStats?.partnerOrganizationsCount?.toString() || '0',
       change: '+2',
       changeType: 'positive',
       icon: Building2,
       color: 'from-secondary to-secondary/90'
     },
     {
-      title: 'Aktywne zadania',
-      value: dashboardStats?.activeTasks?.toString() || '0',
-      change: '+8',
+      title: 'Aktywne Relacje',
+      value: dashboardStats?.activeRelations?.toString() || '0',
+      change: '+6',
       changeType: 'positive',
       icon: CheckSquare,
       color: 'from-emerald-500 to-emerald-600'
+    },
+    {
+      title: 'Oczekujące Relacje',
+      value: dashboardStats?.pendingRelations?.toString() || '0',
+      change: '+4',
+      changeType: 'positive',
+      icon: Clock,
+      color: 'from-amber-500 to-amber-600'
     },
     {
       title: 'Współczynnik konwersji',
@@ -67,7 +99,7 @@ const Dashboard: React.FC = () => {
       change: '+5%',
       changeType: 'positive',
       icon: TrendingUp,
-      color: 'from-amber-500 to-amber-600'
+      color: 'from-primary to-primary/90'
     }
   ]
 
@@ -82,7 +114,7 @@ const Dashboard: React.FC = () => {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {stats.map((stat, index) => (
           <Card key={index} className="relative overflow-hidden border-0 shadow-lg hover:shadow-xl transition-all duration-300">
             <div className={`absolute inset-0 bg-gradient-to-br ${stat.color} opacity-5`} />

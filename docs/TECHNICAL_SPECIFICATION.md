@@ -152,37 +152,55 @@ CREATE INDEX idx_activities_assigned ON activities(assigned_to);
 
 ## 3. API Specification
 
-### 3.1 Struktura API
+### 3.1 Struktura API (Modułowa Architektura)
+
+#### Architektura plików:
+```
+functions/api/
+├── [[path]].ts           # Main router (tylko routing)
+├── middleware/
+│   ├── auth.ts           # Auth middleware
+│   ├── cors.ts           # CORS middleware
+│   └── error.ts          # Error handling
+├── routes/
+│   ├── dashboard.ts      # Dashboard endpoints
+│   ├── mentors.ts        # Mentors CRUD
+│   ├── mentees.ts        # Mentees CRUD
+│   ├── supporters.ts     # Supporters CRUD
+│   ├── companies.ts      # Partner companies CRUD
+│   ├── organizations.ts  # Organizations CRUD
+│   └── relations.ts      # Relations CRUD
+└── utils/
+    ├── db.ts             # Database utilities
+    └── types.ts          # Shared types
+```
+
+#### Struktura endpointów:
 ```
 /api/
-├── public/                 # Publiczne endpointy (bez auth)
-│   ├── apply/mentor       # POST - zgłoszenie mentora
-│   ├── apply/mentee       # POST - zgłoszenie mentee
-│   └── apply/supporter    # POST - zgłoszenie supportera
-├── auth/                  # Uwierzytelnianie
-│   ├── login             # POST - logowanie
-│   └── refresh           # POST - odświeżenie tokena
-├── contacts/             # Zarządzanie kontaktami
-│   ├── mentors           # GET, POST - lista mentorów
-│   ├── mentees           # GET, POST - lista mentees
-│   ├── supporters        # GET, POST - lista supporterów
-│   └── {id}              # GET, PUT, DELETE - konkretny kontakt
-├── companies/            # Zarządzanie firmami
-│   ├── /                 # GET, POST - lista firm
-│   └── {id}              # GET, PUT, DELETE - konkretna firma
-├── organizations/        # Zarządzanie NGO
-│   ├── /                 # GET, POST - lista organizacji
-│   └── {id}              # GET, PUT, DELETE - konkretna organizacja
-├── relations/            # Relacje mentor-mentee
-│   ├── /                 # GET, POST - lista relacji
-│   ├── {id}              # GET, PUT, DELETE - konkretna relacja
-│   └── suggest           # GET - sugestie dopasowań
-├── activities/           # Notatki i zadania
-│   ├── /                 # GET, POST - lista aktywności
-│   └── {id}              # GET, PUT, DELETE - konkretna aktywność
-└── dashboard/            # Dashboardy i statystyki
-    ├── stats             # GET - główne statystyki
-    ├── monthly-growth    # GET - wzrost miesięczny
+├── health                # GET - health check
+├── public/               # Publiczne endpointy (bez auth)
+│   ├── apply/mentor     # POST - zgłoszenie mentora
+│   ├── apply/mentee     # POST - zgłoszenie mentee
+│   └── apply/supporter  # POST - zgłoszenie supportera
+├── contacts/
+│   ├── mentors/         # GET, POST - lista mentorów
+│   │   └── {id}         # GET, PUT, DELETE - konkretny mentor
+│   ├── mentees/         # GET, POST - lista mentees
+│   │   └── {id}         # GET, PUT, DELETE - konkretny mentee
+│   └── supporters/      # GET, POST - lista supporterów
+│       └── {id}         # GET, PUT, DELETE - konkretny supporter
+├── partner-companies/   # GET, POST - firmy partnerskie
+│   └── {id}             # GET, PUT, DELETE - konkretna firma
+├── organizations/       # GET, POST - organizacje partnerskie
+│   └── {id}             # GET, PUT, DELETE - konkretna organizacja
+├── relations/           # Relacje mentor-mentee
+│   ├── /                # GET, POST - lista relacji
+│   ├── {id}             # GET, PUT, DELETE - konkretna relacja
+│   └── suggest          # GET - sugestie dopasowań
+└── dashboard/           # Dashboardy i statystyki
+    ├── stats            # GET - główne statystyki
+    ├── monthly-growth   # GET - wzrost miesięczny
     ├── status-distribution # GET - rozkład statusów
     └── recent-activities # GET - ostatnie aktywności
 ```
