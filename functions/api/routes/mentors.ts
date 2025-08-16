@@ -16,7 +16,7 @@ mentors.get('/', authMiddleware, async (c) => {
     const params: any[] = []
     
     if (search) {
-      whereClause += " AND (name LIKE ? OR email LIKE ? OR specialization LIKE ?)"
+      whereClause += " AND (name LIKE ? OR email LIKE ? OR details LIKE ?)"
       params.push(`%${search}%`, `%${search}%`, `%${search}%`)
     }
     
@@ -26,7 +26,7 @@ mentors.get('/', authMiddleware, async (c) => {
     }
     
     if (specialization) {
-      whereClause += " AND specialization = ?"
+      whereClause += " AND JSON_EXTRACT(details, '$.specialization') = ?"
       params.push(specialization)
     }
     
@@ -63,6 +63,31 @@ mentors.get('/', authMiddleware, async (c) => {
   }
 })
 
+// Get distinct mentor specializations for filters
+mentors.get('/specializations', authMiddleware, async (c) => {
+  try {
+    const db = c.env.DB
+    const query = `
+      SELECT DISTINCT JSON_EXTRACT(details, '$.specialization') AS specialization
+      FROM contacts
+      WHERE type = 'mentor'
+        AND details IS NOT NULL
+        AND JSON_EXTRACT(details, '$.specialization') IS NOT NULL
+      ORDER BY specialization
+    `
+
+    const result = await db.prepare(query).all()
+    const values = (result.results || [])
+      .map((r: any) => r.specialization)
+      .filter((v: any) => typeof v === 'string' && v.trim().length > 0)
+
+    return c.json({ data: values })
+  } catch (error) {
+    console.error('Error fetching mentor specializations:', error)
+    return c.json({ error: 'Internal server error' }, 500)
+  }
+})
+
 // Get single mentor by ID
 mentors.get('/:id', authMiddleware, async (c) => {
   try {
@@ -85,27 +110,34 @@ mentors.get('/:id', authMiddleware, async (c) => {
       return c.json({ error: 'Mentor not found' }, 404)
     }
     
-    // Get mentor's mentees
-    const menteesQuery = `
-      SELECT 
-        c.id,
-        c.name,
-        c.email,
-        c.specialization,
-        r.status as relation_status,
-        r.start_date,
-        r.goals
-      FROM mentor_mentee_relations r
-      JOIN contacts c ON r.mentee_id = c.id
-      WHERE r.mentor_id = ? AND c.type = 'mentee'
-      ORDER BY r.created_at DESC
-    `
-    
-    const menteesResult = await db.prepare(menteesQuery).bind(id).all()
+    // Get mentor's mentees (if mentor_mentee_relations table exists)
+    let mentees = []
+    try {
+      const menteesQuery = `
+        SELECT 
+          c.id,
+          c.name,
+          c.email,
+          JSON_EXTRACT(c.details, '$.specialization') as specialization,
+          r.status as relation_status,
+          r.start_date,
+          r.goals
+        FROM mentor_mentee_relations r
+        JOIN contacts c ON r.mentee_id = c.id
+        WHERE r.mentor_id = ? AND c.type = 'mentee'
+        ORDER BY r.created_at DESC
+      `
+      
+      const menteesResult = await db.prepare(menteesQuery).bind(id).all()
+      mentees = menteesResult.results || []
+    } catch (error) {
+      // Table might not exist yet, that's ok
+      console.log('mentor_mentee_relations table not found, skipping mentees')
+    }
     
     return c.json({
       ...mentorResult,
-      mentees: menteesResult.results
+      mentees: mentees
     })
   } catch (error) {
     console.error('Error fetching mentor:', error)
@@ -122,13 +154,11 @@ mentors.post('/', authMiddleware, async (c) => {
     const {
       name,
       email,
-      phone,
       specialization,
       years_experience,
       availability,
       mentoring_type,
       status = 'new_lead',
-      company_id,
       summary_comment
     } = body
     
@@ -143,25 +173,26 @@ mentors.post('/', authMiddleware, async (c) => {
       return c.json({ error: 'Email already exists' }, 409)
     }
     
+    // Create details JSON object for mentor-specific data
+    const details = JSON.stringify({
+      specialization: specialization || null,
+      years_experience: years_experience || null,
+      availability: availability || null,
+      mentoring_type: mentoring_type || null
+    })
+    
     const insertQuery = `
-      INSERT INTO contacts (
-        type, name, email, phone, specialization, years_experience,
-        availability, mentoring_type, status, company_id, summary_comment
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO contacts (type, name, email, status, summary_comment, details)
+      VALUES (?, ?, ?, ?, ?, ?)
     `
     
     const result = await db.prepare(insertQuery).bind(
       'mentor',
       name,
       email,
-      phone || null,
-      specialization || null,
-      years_experience || null,
-      availability || null,
-      mentoring_type || null,
       status,
-      company_id || null,
-      summary_comment || null
+      summary_comment || null,
+      details
     ).run()
     
     const newMentor = await db.prepare('SELECT * FROM contacts WHERE id = ?').bind(result.lastRowId).first()
@@ -183,13 +214,11 @@ mentors.put('/:id', authMiddleware, async (c) => {
     const {
       name,
       email,
-      phone,
       specialization,
       years_experience,
       availability,
       mentoring_type,
       status,
-      company_id,
       summary_comment
     } = body
     
@@ -204,24 +233,25 @@ mentors.put('/:id', authMiddleware, async (c) => {
       return c.json({ error: 'Email already exists' }, 409)
     }
     
+    // Create details JSON object for mentor-specific data
+    const details = JSON.stringify({
+      specialization: specialization || null,
+      years_experience: years_experience || null,
+      availability: availability || null,
+      mentoring_type: mentoring_type || null
+    })
+    
     const updateQuery = `
-      UPDATE contacts SET
-        name = ?, email = ?, phone = ?, specialization = ?, years_experience = ?,
-        availability = ?, mentoring_type = ?, status = ?, company_id = ?, summary_comment = ?
+      UPDATE contacts SET name = ?, email = ?, status = ?, summary_comment = ?, details = ?
       WHERE id = ? AND type = 'mentor'
     `
     
     const result = await db.prepare(updateQuery).bind(
       name,
       email,
-      phone || null,
-      specialization || null,
-      years_experience || null,
-      availability || null,
-      mentoring_type || null,
       status,
-      company_id || null,
       summary_comment || null,
+      details,
       id
     ).run()
     

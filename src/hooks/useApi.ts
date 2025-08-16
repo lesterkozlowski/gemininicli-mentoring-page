@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
 
 // Use current origin for API calls - works for both dev and production
-const API_BASE_URL = '/api'
+// Empty base URL since endpoints already include /api/
+const API_BASE_URL = ''
 
 // Simple token - in production this would be properly managed
 const AUTH_TOKEN = 'demo-token'
@@ -12,8 +13,18 @@ interface ApiResponse<T> {
   error: string | null
 }
 
+// Ensure components can pass endpoints without worrying about the /api prefix
+function normalizeEndpoint(endpoint: string): string {
+  if (!endpoint) return '/api'
+  // Absolute URLs are left as-is
+  if (endpoint.startsWith('http://') || endpoint.startsWith('https://')) return endpoint
+  const path = endpoint.startsWith('/') ? endpoint : `/${endpoint}`
+  return path.startsWith('/api/') ? path : `/api${path}`
+}
+
 async function apiCall<T>(endpoint: string): Promise<T> {
-  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+  const url = `${API_BASE_URL}${normalizeEndpoint(endpoint)}`
+  const response = await fetch(url, {
     headers: {
       'Authorization': `Bearer ${AUTH_TOKEN}`,
       'Content-Type': 'application/json'

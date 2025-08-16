@@ -61,7 +61,8 @@ mentoring-crm/
 ### 1.3 Co Wymaga Implementacji 🔄
 
 #### Backend API - Brakujące Endpointy:
-- ❌ CRUD dla kontaktów per typ (mentorzy, mentees, supporterzy)
+- ✅ CRUD dla mentorów (backend API)
+- ❌ CRUD dla mentees i supporterów
 - ❌ CRUD dla firm partnerskich
 - ❌ CRUD dla organizacji partnerskich (rozszerzenie)
 - ❌ Zarządzanie relacjami mentor-mentee
@@ -251,6 +252,10 @@ interface DashboardStats {
 
 ### ETAP 4: CRUD Mentorzy (tylko mentorzy)
 **Cel:** Pełne zarządzanie mentorami jako pierwsza encja
+
+**Status:** Backend API mentorów — ukończone; Frontend (komponenty, routing) — w toku.
+
+- Uwaga: Brakuje strony widoku/szczegółów mentora (`/mentors/:id`). Zadanie odłożone na później (do zrobienia po akceptacji obecnego etapu CRUD Mentorów).
 
 #### 4.1 Backend API - Mentorzy
 ```typescript

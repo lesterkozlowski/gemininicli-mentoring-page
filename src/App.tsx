@@ -2,6 +2,8 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Layout from './components/Layout';
 import Dashboard from './components/Dashboard';
 import Mentors from './pages/Mentors';
+import MentorNew from './pages/MentorNew';
+import MentorEdit from './pages/MentorEdit';
 import Mentees from './pages/Mentees';
 import Supporters from './pages/Supporters';
 import PartnerCompanies from './pages/PartnerCompanies';
@@ -19,7 +21,9 @@ function App() {
         <Routes>
           <Route path="/" element={<Dashboard />} />
           <Route path="/mentors" element={<Mentors />} />
+          <Route path="/mentors/new" element={<MentorNew />} />
           <Route path="/mentors/:id" element={<ContactDetail type="mentor" />} />
+          <Route path="/mentors/:id/edit" element={<MentorEdit />} />
           <Route path="/mentees" element={<Mentees />} />
           <Route path="/mentees/:id" element={<ContactDetail type="mentee" />} />
           <Route path="/supporters" element={<Supporters />} />

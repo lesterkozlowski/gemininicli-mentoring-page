@@ -28,16 +28,18 @@ interface Mentor extends Contact {
 export default function Mentors() {
   const [mentors, setMentors] = useState<Mentor[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
-  const [specializationFilter, setSpecializationFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [specializationFilter, setSpecializationFilter] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
   const [specializations, setSpecializations] = useState<string[]>([]);
   
+  const statusParam = statusFilter === 'all' ? '' : statusFilter;
+  const specializationParam = specializationFilter === 'all' ? '' : specializationFilter;
   const { data, loading, error } = useApi<ApiResponse<Mentor>>(
-    `/api/contacts/mentors?page=${currentPage}&limit=12&search=${searchTerm}&status=${statusFilter}&specialization=${specializationFilter}`
+    `/contacts/mentors?page=${currentPage}&limit=12&search=${searchTerm}&status=${statusParam}&specialization=${specializationParam}`
   );
 
-  const { data: specializationsData } = useApi<string[]>('/api/contacts/mentors/specializations');
+  const { data: specializationsData } = useApi<ApiResponse<string>>('/contacts/mentors/specializations');
 
   useEffect(() => {
     if (data) {
@@ -47,7 +49,12 @@ export default function Mentors() {
 
   useEffect(() => {
     if (specializationsData) {
-      setSpecializations(specializationsData);
+      const specs = specializationsData.data || [];
+      setSpecializations(specs);
+      // ensure current selection exists
+      if (specializationFilter !== 'all' && !specs.includes(specializationFilter)) {
+        setSpecializationFilter('all');
+      }
     }
   }, [specializationsData]);
 
@@ -138,7 +145,7 @@ export default function Mentors() {
             <SelectValue placeholder="Wszystkie statusy" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Wszystkie</SelectItem>
+            <SelectItem value="all">Wszystkie</SelectItem>
             <SelectItem value="new_lead">Nowe zgłoszenie</SelectItem>
             <SelectItem value="in_progress">W procesie</SelectItem>
             <SelectItem value="active">Aktywny</SelectItem>
@@ -151,10 +158,15 @@ export default function Mentors() {
             <SelectValue placeholder="Wszystkie specjalizacje" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Wszystkie</SelectItem>
-            {specializations.map((spec) => (
-              <SelectItem key={spec} value={spec}>{spec}</SelectItem>
-            ))}
+            <SelectItem value="all">Wszystkie</SelectItem>
+            {specializations
+              .filter((s) => typeof s === 'string' && s.trim().length > 0)
+              .map((s) => {
+                const spec = s.trim()
+                return (
+                  <SelectItem key={spec} value={spec}>{spec}</SelectItem>
+                )
+              })}
           </SelectContent>
         </Select>
       </div>
