@@ -1,5 +1,6 @@
 import { useNavigate, useParams } from 'react-router-dom'
 import { useApi } from '../hooks/useApi'
+import type { Contact } from '../types/entities'
 import { MentorForm } from '../components/mentors/MentorForm'
 import { Button } from '../components/ui/button'
 import { ArrowLeft, Loader2 } from 'lucide-react'
@@ -8,7 +9,7 @@ export default function MentorEdit() {
   const navigate = useNavigate()
   const { id } = useParams<{ id: string }>()
   
-  const { data: mentor, loading, error } = useApi(`/api/contacts/mentors/${id}`)
+  const { data: mentor, loading, error } = useApi<Contact & { company_name?: string; mentees?: any[] }>(`/api/contacts/mentors/${id}`)
 
   const handleSuccess = () => {
     navigate(`/mentors/${id}`)

@@ -38,6 +38,22 @@ async function apiCall<T>(endpoint: string): Promise<T> {
   return response.json()
 }
 
+// General-purpose API client for POST/PUT/DELETE or custom GETs.
+// Returns the raw Response so callers can handle status and parse as needed.
+export async function api(endpoint: string, options: RequestInit = {}): Promise<Response> {
+  const url = `${API_BASE_URL}${normalizeEndpoint(endpoint)}`
+  const headers = {
+    'Authorization': `Bearer ${AUTH_TOKEN}`,
+    'Content-Type': 'application/json',
+    ...(options.headers || {}),
+  } as Record<string, string>
+
+  return fetch(url, {
+    ...options,
+    headers,
+  })
+}
+
 export function useApi<T>(endpoint: string): ApiResponse<T> {
   const [data, setData] = useState<T | null>(null)
   const [loading, setLoading] = useState(true)

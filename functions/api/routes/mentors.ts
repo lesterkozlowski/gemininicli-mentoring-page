@@ -151,6 +151,8 @@ mentors.post('/', authMiddleware, async (c) => {
     const db = c.env.DB
     const body = await c.req.json()
     
+    console.log('POST /api/contacts/mentors - Request body:', JSON.stringify(body, null, 2))
+    
     const {
       name,
       email,
@@ -162,14 +164,19 @@ mentors.post('/', authMiddleware, async (c) => {
       summary_comment
     } = body
     
+    console.log('Extracted fields:', { name, email, specialization, years_experience, availability, mentoring_type, status, summary_comment })
+    
     // Validate required fields
     if (!name || !email) {
+      console.log('Validation failed: missing name or email')
       return c.json({ error: 'Name and email are required' }, 400)
     }
     
     // Check if email already exists
+    console.log('Checking if email exists:', email)
     const emailCheck = await db.prepare('SELECT id FROM contacts WHERE email = ?').bind(email).first()
     if (emailCheck) {
+      console.log('Email already exists:', emailCheck)
       return c.json({ error: 'Email already exists' }, 409)
     }
     
@@ -181,10 +188,14 @@ mentors.post('/', authMiddleware, async (c) => {
       mentoring_type: mentoring_type || null
     })
     
+    console.log('Details JSON:', details)
+    
     const insertQuery = `
       INSERT INTO contacts (type, name, email, status, summary_comment, details)
       VALUES (?, ?, ?, ?, ?, ?)
     `
+    
+    console.log('Executing INSERT with params:', ['mentor', name, email, status, summary_comment || null, details])
     
     const result = await db.prepare(insertQuery).bind(
       'mentor',
@@ -195,12 +206,19 @@ mentors.post('/', authMiddleware, async (c) => {
       details
     ).run()
     
-    const newMentor = await db.prepare('SELECT * FROM contacts WHERE id = ?').bind(result.lastRowId).first()
+    console.log('INSERT result:', result)
+    console.log('INSERT result.meta:', result.meta)
+    
+    const newMentor = await db.prepare('SELECT * FROM contacts WHERE id = ?').bind(result.meta.last_row_id).first()
+    
+    console.log('New mentor created:', newMentor)
     
     return c.json(newMentor, 201)
   } catch (error) {
-    console.error('Error creating mentor:', error)
-    return c.json({ error: 'Internal server error' }, 500)
+    console.error('Error creating mentor - Full error object:', error)
+    console.error('Error creating mentor - Stack trace:', error.stack)
+    console.error('Error creating mentor - Message:', error.message)
+    return c.json({ error: 'Internal server error', details: error.message }, 500)
   }
 })
 

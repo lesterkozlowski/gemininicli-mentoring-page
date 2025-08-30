@@ -43,7 +43,20 @@ export default function Mentors() {
 
   useEffect(() => {
     if (data) {
-      setMentors(data.data || []);
+      const list = (data.data || []).map((m: any) => {
+        let details: any = {}
+        try {
+          details = m.details ? JSON.parse(m.details) : {}
+        } catch {
+          details = {}
+        }
+        return {
+          ...m,
+          specialization: m.specialization ?? details.specialization,
+          years_experience: m.years_experience ?? details.years_experience,
+        }
+      })
+      setMentors(list);
     }
   }, [data]);
 

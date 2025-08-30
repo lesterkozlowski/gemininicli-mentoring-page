@@ -1,7 +1,7 @@
 import React from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card'
-import { Users, Building2, CheckSquare, TrendingUp, UserPlus, Calendar, MessageSquare, Clock, Loader2 } from 'lucide-react'
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from 'recharts'
+import { Users, Building2, CheckSquare, TrendingUp, UserPlus, Calendar, Clock, Loader2 } from 'lucide-react'
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts'
 import { useApi } from '../hooks/useApi'
 import { DashboardStats, MonthlyGrowthData, StatusDistribution, RecentActivity } from '../types/api'
 

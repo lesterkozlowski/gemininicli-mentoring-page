@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { useApi } from '@/hooks/useApi';
+import { api } from '@/hooks/useApi';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 
@@ -37,29 +37,55 @@ interface MentorFormProps {
 }
 
 export function MentorForm({ mentor, onSuccess }: MentorFormProps) {
-  const { api } = useApi();
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Safely parse details JSON from API object
+  const parsedDetails = (() => {
+    try {
+      return mentor?.details ? JSON.parse(mentor.details) : {}
+    } catch {
+      return {}
+    }
+  })()
+
   const form = useForm<MentorFormData>({
     resolver: zodResolver(mentorSchema),
-    defaultValues: mentor || {
-      name: '',
-      email: '',
-      phone: '',
-      specialization: '',
-      experience_years: 0,
-      availability: 'flexible',
-      mentoring_areas: [],
-      company_id: undefined,
-      summary_comment: '',
-      details: {
-        linkedin_url: '',
-        bio: '',
-        preferred_mentoring_type: '1_on_1',
-        max_mentees: 3,
-      },
-    },
+    defaultValues: mentor
+      ? {
+          name: mentor.name ?? '',
+          email: mentor.email ?? '',
+          phone: mentor.phone ?? '',
+          specialization: parsedDetails.specialization ?? '',
+          experience_years: parsedDetails.years_experience ?? 0,
+          availability: parsedDetails.availability ?? 'flexible',
+          mentoring_areas: [],
+          company_id: mentor.company_id ?? undefined,
+          summary_comment: mentor.summary_comment ?? '',
+          details: {
+            linkedin_url: parsedDetails.linkedin_url ?? '',
+            bio: parsedDetails.bio ?? '',
+            preferred_mentoring_type: parsedDetails.mentoring_type ?? '1_on_1',
+            max_mentees: parsedDetails.max_mentees ?? 3,
+          },
+        }
+      : {
+          name: '',
+          email: '',
+          phone: '',
+          specialization: '',
+          experience_years: 0,
+          availability: 'flexible',
+          mentoring_areas: [],
+          company_id: undefined,
+          summary_comment: '',
+          details: {
+            linkedin_url: '',
+            bio: '',
+            preferred_mentoring_type: '1_on_1',
+            max_mentees: 3,
+          },
+        },
   });
 
   const onSubmit = async (data: MentorFormData) => {
@@ -68,12 +94,23 @@ export function MentorForm({ mentor, onSuccess }: MentorFormProps) {
       const endpoint = mentor ? `/api/contacts/mentors/${mentor.id}` : '/api/contacts/mentors';
       const method = mentor ? 'PUT' : 'POST';
       
+      // Map form fields to backend payload
+      const payload = {
+        name: data.name,
+        email: data.email,
+        status: mentor?.status ?? 'new_lead',
+        summary_comment: data.summary_comment,
+        specialization: data.specialization,
+        years_experience: data.experience_years,
+        availability: data.availability,
+        mentoring_type: data.details?.preferred_mentoring_type,
+      }
+      
+      console.log('Frontend payload:', JSON.stringify(payload, null, 2))
+
       const response = await api(endpoint, {
         method,
-        body: JSON.stringify({
-          ...data,
-          type: 'mentor',
-        }),
+        body: JSON.stringify(payload),
       });
 
       if (response.ok) {

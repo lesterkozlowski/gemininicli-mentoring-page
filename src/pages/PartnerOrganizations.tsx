@@ -48,7 +48,7 @@ export default function PartnerOrganizations() {
           <Card key={org.id}>
             <CardHeader>
               <CardTitle>{org.name}</CardTitle>
-              <CardDescription>{org.type}</CardDescription>
+              <CardDescription>{org.summary_comment || 'Organizacja partnerska'}</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
